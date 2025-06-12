@@ -1,0 +1,32 @@
+body {
+  font-family: Arial;
+  padding: 20px;
+  background: #f4f4f4;
+}
+.hidden {
+  display: none;
+}
+#login-screen, #app-screen {
+  max-width: 500px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+input {
+  display: block;
+  margin: 10px 0;
+  padding: 8px;
+  width: 100%;
+}
+button {
+  padding: 10px;
+  margin: 5px 0;
+}
+.chore {
+  border-bottom: 1px solid #ccc;
+  padding: 10px 0;
+}
+.paid {
+  color: green;
+}
