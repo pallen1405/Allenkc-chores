@@ -11,12 +11,37 @@ function debug(message) {
 // Log when the script loads
 debug("App.js script loaded");
 
+// Define users with PINs and roles
 const users = {
   "Izzy Allen": { pin: "1234", role: "child" },
   "Charlie Allen": { pin: "5678", role: "child" },
   "Judah Allen": { pin: "9012", role: "child" },
   "Parent": { pin: "0000", role: "parent" }
 };
+
+// Load saved users from local storage if available
+function loadUsers() {
+  const savedUsers = localStorage.getItem('users');
+  if (savedUsers) {
+    // Merge saved users with default users (for backward compatibility)
+    const parsedUsers = JSON.parse(savedUsers);
+    Object.keys(parsedUsers).forEach(user => {
+      if (users[user]) {
+        users[user].pin = parsedUsers[user].pin;
+      }
+    });
+    debug("Loaded users from localStorage");
+  }
+}
+
+// Save users to local storage
+function saveUsers() {
+  localStorage.setItem('users', JSON.stringify(users));
+  debug("Saved users to localStorage");
+}
+
+// Initialize by loading users
+loadUsers();
 
 let currentUser = null;
 let currentRole = null;
@@ -411,4 +436,77 @@ if (typeof loginSimple === 'function') {
   debug("loginSimple function is properly defined");
 } else {
   debug("ERROR: loginSimple function is NOT properly defined");
+}
+
+// Function to reset a child's PIN
+function resetPin() {
+  if (currentRole !== 'parent') {
+    alert("Only the parent can reset PINs");
+    return;
+  }
+  
+  const childName = document.getElementById("pin-reset-child").value;
+  const newPin = document.getElementById("new-pin").value;
+  
+  if (!childName) {
+    alert("Please select a child");
+    return;
+  }
+  
+  if (!newPin || newPin.length < 4) {
+    alert("Please enter a valid PIN (at least 4 characters)");
+    return;
+  }
+  
+  if (!users[childName] || users[childName].role !== "child") {
+    alert("Invalid child selected");
+    return;
+  }
+  
+  // Update the PIN
+  users[childName].pin = newPin;
+  saveUsers();
+  
+  // Clear the input field
+  document.getElementById("new-pin").value = "";
+  
+  alert(`PIN for ${childName} has been updated successfully!`);
+}
+
+// Function to export all chore data to CSV
+function exportChoreData() {
+  if (currentRole !== 'parent') {
+    alert("Only the parent can export data");
+    return;
+  }
+  
+  // Get all chore data
+  const allChores = getChildrenChores();
+  
+  // Create CSV content
+  let csvContent = "Child,Chore,Rate,Status,Completed Date\n";
+  
+  Object.keys(allChores).forEach(child => {
+    allChores[child].forEach(chore => {
+      const status = chore.paid ? "Paid" : (chore.done ? "Done" : "Not Done");
+      const completedDate = chore.doneAt ? new Date(chore.doneAt).toLocaleString() : "N/A";
+      
+      // Add row to CSV
+      csvContent += `"${child}","${chore.name}","$${chore.rate}","${status}","${completedDate}"\n`;
+    });
+  });
+  
+  // Create a blob and download link
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  
+  // Create and trigger download link
+  const downloadLink = document.createElement("a");
+  const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  downloadLink.href = url;
+  downloadLink.download = `chore-data-${currentDate}.csv`;
+  
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
 }

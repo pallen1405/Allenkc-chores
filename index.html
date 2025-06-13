@@ -52,6 +52,24 @@
       <button onclick="assignChore()">Assign Chore</button>
     </div>
 
+    <div class="parent-controls">
+      <h3>Reset Child PIN</h3>
+      <select id="pin-reset-child">
+        <option value="">Select Child</option>
+        <option value="Izzy Allen">Izzy Allen</option>
+        <option value="Charlie Allen">Charlie Allen</option>
+        <option value="Judah Allen">Judah Allen</option>
+      </select>
+      <input type="password" id="new-pin" placeholder="New PIN" />
+      <button onclick="resetPin()">Reset PIN</button>
+    </div>
+
+    <div class="parent-controls">
+      <h3>Export Data</h3>
+      <p>Download all chore data as CSV for your records.</p>
+      <button onclick="exportChoreData()">Export to CSV</button>
+    </div>
+
     <h3>Children's Chores</h3>
     <div id="parent-dashboard"></div>
   </div>
