@@ -21,18 +21,54 @@ const users = {
 let currentUser = null;
 let currentRole = null;
 
+// Simple login function for the login button
+function loginSimple() {
+  debug("Simple login function triggered");
+  
+  const name = document.getElementById("user-name").value;
+  const pin = document.getElementById("user-pin").value;
+  
+  debug(`Login attempt with name: ${name}, pin length: ${pin ? pin.length : 0}`);
+  
+  if (!name) {
+    alert("Please select a user");
+    return;
+  }
+  
+  if (!pin) {
+    alert("Please enter your PIN");
+    return;
+  }
+  
+  // Simple test login
+  if (users[name] && users[name].pin === pin) {
+    debug("Login successful");
+    currentUser = name;
+    currentRole = users[name].role;
+    document.getElementById("login-screen").classList.add("hidden");
+    
+    if (users[name].role === "parent") {
+      document.getElementById("parent-screen").classList.remove("hidden");
+      loadParentDashboard();
+    } else {
+      document.getElementById("child-screen").classList.remove("hidden");
+      document.getElementById("welcome-msg").textContent = `Welcome, ${name}!`;
+      renderChores();
+    }
+  } else {
+    alert("Invalid username or PIN");
+  }
+}
+
 // Initialize the application
 window.onload = function() {
   debug("Window loaded");
   
-  // Add a simple click handler for testing
-  const loginButton = document.getElementById("login-button");
-  if (loginButton) {
-    debug("Login button found, adding click listener");
-    loginButton.onclick = loginSimple;
-  } else {
-    debug("ERROR: Login button not found!");
-  }
+  // Check if we need to set up event listeners
+  // (We're using inline onclick in HTML, so we don't need these anymore)
+  // Just keep this for reference and future enhancements
+  
+  debug("Application initialized");
 };
 
 // Check if there's a saved session
@@ -123,6 +159,15 @@ function renderChores() {
 
     const checked = chore.done ? "checked" : "";
     const payClass = chore.paid ? "paid" : "";
+    
+    // Create the checkbox container with label
+    const checkboxContainer = document.createElement("div");
+    checkboxContainer.className = "checkbox-container";
+    
+    const checkboxLabel = document.createElement("span");
+    checkboxLabel.className = "checkbox-label";
+    checkboxLabel.textContent = "Done?";
+    checkboxContainer.appendChild(checkboxLabel);
 
     // Create the checkbox
     const checkbox = document.createElement("input");
@@ -132,11 +177,13 @@ function renderChores() {
     checkbox.addEventListener("change", function() {
       toggleDone(parseInt(this.dataset.index));
     });
+    checkboxContainer.appendChild(checkbox);
 
     // Create the chore name span
     const nameSpan = document.createElement("span");
-    nameSpan.className = payClass;
+    nameSpan.className = `chore-name ${payClass}`;
     nameSpan.textContent = `${chore.name} ($${chore.rate})`;
+    nameSpan.style.flex = "1"; // Take up available space
 
     // Create the "Mark Paid" button
     const paidButton = document.createElement("button");
@@ -155,7 +202,7 @@ function renderChores() {
     });
 
     // Add elements to div
-    div.appendChild(checkbox);
+    div.appendChild(checkboxContainer);
     div.appendChild(nameSpan);
     div.appendChild(paidButton);
     div.appendChild(deleteButton);
@@ -238,29 +285,38 @@ function renderParentDashboard() {
     const choresList = document.createElement("div");
     choresList.className = "child-chores";
     
-    childrenChores[child].forEach((chore, index) => {
-      const choreItem = document.createElement("div");
-      choreItem.className = "chore";
-      
-      const status = chore.done ? (chore.paid ? "Paid" : "Done") : "Not Done";
-      const statusClass = chore.done ? (chore.paid ? "paid" : "done") : "";
-      
-      // Create the chore name span
-      const nameSpan = document.createElement("span");
-      nameSpan.className = statusClass;
-      nameSpan.textContent = `${chore.name} ($${chore.rate})`;
-      
-      // Create the status span
-      const statusSpan = document.createElement("span");
-      statusSpan.className = "status";
-      statusSpan.textContent = status;
-      
-      // Add elements to the chore item
-      choreItem.appendChild(nameSpan);
-      choreItem.appendChild(statusSpan);
-      
-      choresList.appendChild(choreItem);
-    });
+    if (childrenChores[child].length === 0) {
+      const noChoresMsg = document.createElement("p");
+      noChoresMsg.textContent = "No chores assigned yet.";
+      noChoresMsg.style.fontStyle = "italic";
+      noChoresMsg.style.color = "#666";
+      choresList.appendChild(noChoresMsg);
+    } else {
+      childrenChores[child].forEach((chore, index) => {
+        const choreItem = document.createElement("div");
+        choreItem.className = "chore";
+        
+        const status = chore.done ? (chore.paid ? "Paid" : "Done") : "Not Done";
+        const statusClass = chore.done ? (chore.paid ? "paid" : "done") : "";
+        
+        // Create the chore name span
+        const nameSpan = document.createElement("span");
+        nameSpan.className = `chore-name ${statusClass}`;
+        nameSpan.textContent = `${chore.name} ($${chore.rate})`;
+        nameSpan.style.flex = "1"; // Take up available space
+        
+        // Create the status span
+        const statusSpan = document.createElement("span");
+        statusSpan.className = "status";
+        statusSpan.textContent = status;
+        
+        // Add elements to the chore item
+        choreItem.appendChild(nameSpan);
+        choreItem.appendChild(statusSpan);
+        
+        choresList.appendChild(choreItem);
+      });
+    }
     
     childSection.appendChild(choresList);
     dashboardDiv.appendChild(childSection);
@@ -300,37 +356,9 @@ function assignChore() {
   renderParentDashboard();
 }
 
-// Simple login function for testing
-function loginSimple() {
-  debug("Simple login function triggered");
-  
-  const name = document.getElementById("user-name").value;
-  const pin = document.getElementById("user-pin").value;
-  
-  debug(`Login attempt with name: ${name}, pin length: ${pin.length}`);
-  
-  if (!name) {
-    alert("Please select a user");
-    return;
-  }
-  
-  if (!pin) {
-    alert("Please enter your PIN");
-    return;
-  }
-  
-  // Simple test login
-  if (users[name] && users[name].pin === pin) {
-    alert("Login successful!");
-    document.getElementById("login-screen").classList.add("hidden");
-    
-    if (users[name].role === "parent") {
-      document.getElementById("parent-screen").classList.remove("hidden");
-    } else {
-      document.getElementById("child-screen").classList.remove("hidden");
-      document.getElementById("welcome-msg").textContent = `Welcome, ${name}!`;
-    }
-  } else {
-    alert("Invalid username or PIN");
-  }
+// Check if loginSimple is defined
+if (typeof loginSimple === 'function') {
+  debug("loginSimple function is properly defined");
+} else {
+  debug("ERROR: loginSimple function is NOT properly defined");
 }
