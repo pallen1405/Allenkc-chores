@@ -12,6 +12,16 @@ function login() {
   const name = document.getElementById("user-name").value;
   const pin = document.getElementById("user-pin").value;
 
+  if (!name) {
+    alert("Please select a user");
+    return;
+  }
+  
+  if (!pin) {
+    alert("Please enter a PIN");
+    return;
+  }
+
   if (users[name] && users[name].pin === pin) {
     currentUser = name;
     currentRole = users[name].role;
