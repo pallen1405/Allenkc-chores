@@ -9,7 +9,13 @@
 <body>
   <div id="login-screen">
     <h2>Allen Family Chore Tracker</h2>
-    <input type="text" id="user-name" placeholder="Enter name" />
+    <select id="user-name">
+      <option value="">Select User</option>
+      <option value="Izzy Allen">Izzy Allen</option>
+      <option value="Charlie Allen">Charlie Allen</option>
+      <option value="Judah Allen">Judah Allen</option>
+      <option value="Parent">Parent</option>
+    </select>
     <input type="password" id="user-pin" placeholder="Enter PIN" />
     <button onclick="login()">Login</button>
   </div>
