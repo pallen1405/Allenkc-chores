@@ -3,30 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chore Tracker</title>
+  <title>Allen Family Chore Tracker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="login-screen">
-    <h2>Login</h2>
-    <input type="text" id="child-name" placeholder="Enter name" />
-    <input type="password" id="child-pin" placeholder="Enter PIN" />
+    <h2>Allen Family Chore Tracker</h2>
+    <input type="text" id="user-name" placeholder="Enter name" />
+    <input type="password" id="user-pin" placeholder="Enter PIN" />
     <button onclick="login()">Login</button>
   </div>
 
-  <div id="app-screen" class="hidden">
+  <div id="child-screen" class="hidden">
     <h2 id="welcome-msg"></h2>
     <button onclick="logout()">Logout</button>
 
-    <h3>Chores</h3>
+    <h3>My Chores</h3>
     <div id="chore-list"></div>
 
-    <h4>Add New Chore</h4>
-    <input type="text" id="new-chore-name" placeholder="Chore Name" />
-    <input type="number" id="new-chore-rate" placeholder="Rate ($)" />
-    <button onclick="addChore()">Add</button>
-
     <div id="summary"></div>
+  </div>
+
+  <div id="parent-screen" class="hidden">
+    <h2>Parent Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+
+    <div class="parent-controls">
+      <h3>Assign New Chore</h3>
+      <select id="assign-child">
+        <option value="">Select Child</option>
+        <option value="Izzy Allen">Izzy Allen</option>
+        <option value="Charlie Allen">Charlie Allen</option>
+        <option value="Judah Allen">Judah Allen</option>
+      </select>
+      <input type="text" id="assign-chore-name" placeholder="Chore Name" />
+      <input type="number" id="assign-chore-rate" placeholder="Rate ($)" step="0.01" min="0" />
+      <button onclick="assignChore()">Assign Chore</button>
+    </div>
+
+    <h3>Children's Chores</h3>
+    <div id="parent-dashboard"></div>
   </div>
 
   <script src="app.js"></script>

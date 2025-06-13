@@ -1,20 +1,30 @@
 const users = {
-  "Emma": "1234",
-  "Liam": "5678"
+  "Izzy Allen": { pin: "1234", role: "child" },
+  "Charlie Allen": { pin: "5678", role: "child" },
+  "Judah Allen": { pin: "9012", role: "child" },
+  "Parent": { pin: "0000", role: "parent" }
 };
 
 let currentUser = null;
+let currentRole = null;
 
 function login() {
-  const name = document.getElementById("child-name").value;
-  const pin = document.getElementById("child-pin").value;
+  const name = document.getElementById("user-name").value;
+  const pin = document.getElementById("user-pin").value;
 
-  if (users[name] && users[name] === pin) {
+  if (users[name] && users[name].pin === pin) {
     currentUser = name;
+    currentRole = users[name].role;
     document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("app-screen").classList.remove("hidden");
-    document.getElementById("welcome-msg").textContent = `Welcome, ${name}`;
-    renderChores();
+    
+    if (currentRole === "parent") {
+      document.getElementById("parent-screen").classList.remove("hidden");
+      loadParentDashboard();
+    } else {
+      document.getElementById("child-screen").classList.remove("hidden");
+      document.getElementById("welcome-msg").textContent = `Welcome, ${name}`;
+      renderChores();
+    }
   } else {
     alert("Invalid name or PIN");
   }
@@ -22,8 +32,22 @@ function login() {
 
 function logout() {
   currentUser = null;
+  currentRole = null;
   document.getElementById("login-screen").classList.remove("hidden");
-  document.getElementById("app-screen").classList.add("hidden");
+  document.getElementById("child-screen").classList.add("hidden");
+  document.getElementById("parent-screen").classList.add("hidden");
+}
+
+function getChildrenChores() {
+  const allChores = {};
+  
+  Object.keys(users).forEach(user => {
+    if (users[user].role === "child") {
+      allChores[user] = JSON.parse(localStorage.getItem(`chores_${user}`)) || [];
+    }
+  });
+  
+  return allChores;
 }
 
 function getChores() {
@@ -108,4 +132,80 @@ function deleteChore(index) {
   chores.splice(index, 1);
   saveChores(chores);
   renderChores();
+}
+
+// Parent functions
+function loadParentDashboard() {
+  renderParentDashboard();
+}
+
+function renderParentDashboard() {
+  const childrenChores = getChildrenChores();
+  const dashboardDiv = document.getElementById("parent-dashboard");
+  dashboardDiv.innerHTML = "";
+  
+  // Create a section for each child
+  Object.keys(childrenChores).forEach(child => {
+    const childSection = document.createElement("div");
+    childSection.className = "child-section";
+    
+    const childHeader = document.createElement("h3");
+    childHeader.textContent = child;
+    childSection.appendChild(childHeader);
+    
+    // Create a list of chores for this child
+    const choresList = document.createElement("div");
+    choresList.className = "child-chores";
+    
+    childrenChores[child].forEach((chore, index) => {
+      const choreItem = document.createElement("div");
+      choreItem.className = "chore";
+      
+      const status = chore.done ? (chore.paid ? "Paid" : "Done") : "Not Done";
+      const statusClass = chore.done ? (chore.paid ? "paid" : "done") : "";
+      
+      choreItem.innerHTML = `
+        <span class="${statusClass}">${chore.name} ($${chore.rate})</span>
+        <span class="status">${status}</span>
+      `;
+      
+      choresList.appendChild(choreItem);
+    });
+    
+    childSection.appendChild(choresList);
+    dashboardDiv.appendChild(childSection);
+  });
+}
+
+function assignChore() {
+  const childName = document.getElementById("assign-child").value;
+  const choreName = document.getElementById("assign-chore-name").value;
+  const choreRate = parseFloat(document.getElementById("assign-chore-rate").value);
+  
+  if (!childName || !choreName || isNaN(choreRate)) {
+    alert("Please enter valid child name, chore name, and rate.");
+    return;
+  }
+  
+  if (!users[childName] || users[childName].role !== "child") {
+    alert("Please select a valid child.");
+    return;
+  }
+  
+  const childChores = JSON.parse(localStorage.getItem(`chores_${childName}`)) || [];
+  childChores.push({
+    name: choreName,
+    rate: choreRate,
+    done: false,
+    paid: false
+  });
+  
+  localStorage.setItem(`chores_${childName}`, JSON.stringify(childChores));
+  
+  // Clear the form
+  document.getElementById("assign-chore-name").value = "";
+  document.getElementById("assign-chore-rate").value = "";
+  
+  // Refresh the dashboard
+  renderParentDashboard();
 }
