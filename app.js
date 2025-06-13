@@ -185,13 +185,26 @@ function renderChores() {
     nameSpan.textContent = `${chore.name} ($${chore.rate})`;
     nameSpan.style.flex = "1"; // Take up available space
 
-    // Create the "Mark Paid" button
-    const paidButton = document.createElement("button");
-    paidButton.textContent = "Mark Paid";
-    paidButton.dataset.index = index;
-    paidButton.addEventListener("click", function() {
-      markPaid(parseInt(this.dataset.index));
-    });
+    // Done timestamp
+    const doneTime = document.createElement("span");
+    doneTime.className = "done-time";
+    if (chore.done && chore.doneAt) {
+      doneTime.textContent = `Done: ${new Date(chore.doneAt).toLocaleString()}`;
+      doneTime.style.marginLeft = "10px";
+      doneTime.style.fontSize = "0.8em";
+      doneTime.style.color = "#888";
+    }
+
+    // "Mark Paid" button (only for parent)
+    let paidButton = null;
+    if (currentRole === "parent") {
+      paidButton = document.createElement("button");
+      paidButton.textContent = "Mark Paid";
+      paidButton.dataset.index = index;
+      paidButton.addEventListener("click", function() {
+        markPaid(parseInt(this.dataset.index));
+      });
+    }
 
     // Create the delete button
     const deleteButton = document.createElement("button");
@@ -204,7 +217,8 @@ function renderChores() {
     // Add elements to div
     div.appendChild(checkboxContainer);
     div.appendChild(nameSpan);
-    div.appendChild(paidButton);
+    if (chore.done && chore.doneAt) div.appendChild(doneTime);
+    if (paidButton) div.appendChild(paidButton);
     div.appendChild(deleteButton);
 
     if (chore.done) earned += Number(chore.rate);
@@ -240,11 +254,21 @@ function addChore() {
 function toggleDone(index) {
   const chores = getChores();
   chores[index].done = !chores[index].done;
+  if (chores[index].done) {
+    chores[index].doneAt = new Date().toISOString();
+  } else {
+    chores[index].doneAt = null;
+    chores[index].paid = false; // Unmark as paid if undone
+  }
   saveChores(chores);
   renderChores();
 }
 
 function markPaid(index) {
+  if (currentRole !== "parent") {
+    alert("Only the parent can mark chores as paid.");
+    return;
+  }
   const chores = getChores();
   if (chores[index].done) {
     chores[index].paid = true;
@@ -305,13 +329,39 @@ function renderParentDashboard() {
         nameSpan.textContent = `${chore.name} ($${chore.rate})`;
         nameSpan.style.flex = "1"; // Take up available space
         
-        // Create the status span
-        const statusSpan = document.createElement("span");
-        statusSpan.className = "status";
-        statusSpan.textContent = status;
+        // Done timestamp
+        const doneTime = document.createElement("span");
+        doneTime.className = "done-time";
+        if (chore.done && chore.doneAt) {
+          doneTime.textContent = `Done: ${new Date(chore.doneAt).toLocaleString()}`;
+          doneTime.style.marginLeft = "10px";
+          doneTime.style.fontSize = "0.8em";
+          doneTime.style.color = "#888";
+        }
+        
+        // "Mark Paid" button for parent
+        let paidButton = null;
+        if (!chore.paid && chore.done) {
+          paidButton = document.createElement("button");
+          paidButton.textContent = "Mark Paid";
+          paidButton.addEventListener("click", function() {
+            // Mark as paid in the child's storage
+            const childChores = JSON.parse(localStorage.getItem(`chores_${child}`)) || [];
+            childChores[index].paid = true;
+            localStorage.setItem(`chores_${child}`, JSON.stringify(childChores));
+            renderParentDashboard();
+          });
+        }
         
         // Add elements to the chore item
         choreItem.appendChild(nameSpan);
+        if (chore.done && chore.doneAt) choreItem.appendChild(doneTime);
+        if (paidButton) choreItem.appendChild(paidButton);
+        
+        // Status
+        const statusSpan = document.createElement("span");
+        statusSpan.className = "status";
+        statusSpan.textContent = status;
         choreItem.appendChild(statusSpan);
         
         choresList.appendChild(choreItem);
